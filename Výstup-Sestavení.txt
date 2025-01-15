@@ -1,0 +1,3 @@
+﻿Sestavení zahájeno v 14:43...
+========== Build: úspěšné: 0, chybné: 0, aktuální: 1, vynechané: 0 ==========
+========== Sestavení dokončeno v 14:43 a trvalo 00,175 sekund ==========
