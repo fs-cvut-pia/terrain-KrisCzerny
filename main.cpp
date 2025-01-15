@@ -4,46 +4,63 @@
 #include <iostream>
 #include <string>
 
-// Include files of your path classes will need to be added here
+// Přidáváme naše odvozené třídy s implementací find():
+#include "PlanePath.h"
+#include "BoatPath.h"
+#include "RoadPath.h"
+#include "RoadFerryPath.h"
+#include "RailPath.h"
 
-Point read_coordinates(int argc, char *argv[], int i_option) {
-    Point p;
-
-    if (argc > i_option+1) { p.x = std::atoi(argv[i_option]); p.y = std::atoi(argv[i_option + 1]); }
-    else throw std::runtime_error("Coordinates incorrectly specified!");
-
-    return p;
-}
-
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     const int nx = 256;
     const int ny = 256;
 
+    // 1) Pokusíme se načíst název souboru s mapou z argumentu
     std::string terrain_filename;
+    if (argc > 1) {
+        terrain_filename = argv[1];
+    }
+    else {
+        std::cout << "No terrain file specified! Použije se výchozí: terrain.dat" << std::endl;
+        terrain_filename = "terrain.dat";
+    }
 
-    // Load the terrain map
+    // 2) Vytvoříme mapu
+    TerrainMap m(nx, ny, terrain_filename);
 
-    if (argc > 1) terrain_filename = argv[1];
-    else { std::cout << "No terrain file specified!" << std::endl; return 0; }
+    // 3) Zeptáme se uživatele na souřadnice
+    int startX, startY;
+    std::cout << "Zadejte souřadnice počátku (x y): ";
+    std::cin >> startX >> startY;
 
-    TerrainMap m(nx,ny,terrain_filename);
+    int finishX, finishY;
+    std::cout << "Zadejte souřadnice konce (x y): ";
+    std::cin >> finishX >> finishY;
 
-    // Load the coordinates of the start and end points
+    // 4) Vytvoříme objekty typu Point
+    Point start(startX, startY);
+    Point finish(finishX, finishY);
 
-    Point start = read_coordinates(argc,argv,2);
-    Point finish = read_coordinates(argc,argv,4);
-
-    std::vector<Path*> paths = { //new YourPath(m,"MyPathName",start,finish), ...
-        // Here add the list of dynamically created classes with path finding algorithms
+    // 5) Přidáme pět variant cest
+    std::vector<Path*> paths = {
+       new PlanePath(m, "Plane",       start, finish),
+       new BoatPath(m,  "Boat",        start, finish),
+       new RoadPath(m,  "Road",        start, finish),
+       new RoadFerryPath(m, "Road+Ferry", start, finish),
+       new RailPath(m,  "Rail",        start, finish)
     };
 
+    // 6) Spustíme hledání pro každou variantu
     for (auto& p : paths) {
         std::cout << "Path search: " << p->getName() << std::endl;
         std::cout << "=============" << std::endl;
-        p->find();
+        bool ok = p->find();
+        if (!ok) {
+            std::cout << "Path not found!" << std::endl;
+        }
         p->printStats();
         std::cout << "=============" << std::endl;
-        p->saveToFile();
+        p->saveToFile(); // Uloží se např. do "Plane.dat", "Boat.dat", atd.
         delete p;
     }
 
